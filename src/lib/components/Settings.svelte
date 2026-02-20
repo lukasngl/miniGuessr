@@ -170,7 +170,7 @@ function handleKeydown(e: KeyboardEvent) {
 				</div>
 			{/if}
 
-			<fieldset class="mode-group">
+			<fieldset class="mode-group map-size-desktop">
 				<legend>Map Size</legend>
 				<div class="field">
 					<label for="mapSize">Normal: {localSettings.mapSize}vw</label>
@@ -190,6 +190,20 @@ function handleKeydown(e: KeyboardEvent) {
 						min={20}
 						max={90}
 						bind:value={localSettings.mapSizeExpanded}
+					/>
+				</div>
+			</fieldset>
+
+			<fieldset class="mode-group map-size-mobile">
+				<legend>Map Height</legend>
+				<div class="field">
+					<label for="mapHeight">{localSettings.mapHeight}vh</label>
+					<input
+						type="range"
+						id="mapHeight"
+						min={15}
+						max={60}
+						bind:value={localSettings.mapHeight}
 					/>
 				</div>
 			</fieldset>
@@ -343,5 +357,18 @@ function handleKeydown(e: KeyboardEvent) {
 
 	.apply-btn:hover {
 		background: #3367d6;
+	}
+
+	.map-size-mobile {
+		display: none;
+	}
+
+	@media (max-width: 768px) {
+		.map-size-desktop {
+			display: none;
+		}
+		.map-size-mobile {
+			display: flex;
+		}
 	}
 </style>

@@ -10,6 +10,7 @@ export interface GameSettings {
 	cityRadius: number; // km radius around city center
 	mapSize: number; // normal map size as vw percentage
 	mapSizeExpanded: number; // expanded (hover) map size as vw percentage
+	mapHeight: number; // mobile map height as vh percentage
 }
 
 export interface Location {

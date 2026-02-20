@@ -29,6 +29,7 @@ const defaultSettings: GameSettings = {
 	cityRadius: 5,
 	mapSize: 25,
 	mapSizeExpanded: 50,
+	mapHeight: 33,
 };
 
 function loadSettings(): GameSettings {
@@ -136,7 +137,7 @@ onMount(async () => {
 	{/if}
 
 	<!-- Map and action buttons container - hover expands both -->
-	<div class="map-area" style="--map-size: {settings.mapSize}vw; --map-size-expanded: {settings.mapSizeExpanded}vw;">
+	<div class="map-area" style="--map-size: {settings.mapSize}vw; --map-size-expanded: {settings.mapSizeExpanded}vw; --map-height: {settings.mapHeight}vh;">
 		{#if L}
 			<GuessMap
 				{L}

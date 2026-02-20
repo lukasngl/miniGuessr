@@ -241,13 +241,13 @@ function handleMouseEnter() {
 
 	@media (max-width: 768px) {
 		.map-wrapper {
-			height: 33vh;
+			height: var(--map-height, 33vh);
 			border-radius: 0;
 			transition: none;
 		}
 
 		:global(.map-area:hover) .map-wrapper {
-			height: 33vh;
+			height: var(--map-height, 33vh);
 		}
 	}
 </style>
