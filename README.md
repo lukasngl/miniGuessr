@@ -2,6 +2,8 @@
 
 A lightweight GeoGuessr-style game built with SvelteKit. Explore random Google Street View locations and guess where you are on a map.
 
+**Play it:** https://lukasngl.github.io/miniGuessr/
+
 ## Features
 
 - Random Street View locations worldwide or filtered by country

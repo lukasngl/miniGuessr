@@ -8,6 +8,8 @@ export interface GameSettings {
 	city: Settlement | null;
 	minPop: number;
 	cityRadius: number; // km radius around city center
+	mapSize: number; // normal map size as vw percentage
+	mapSizeExpanded: number; // expanded (hover) map size as vw percentage
 }
 
 export interface Location {

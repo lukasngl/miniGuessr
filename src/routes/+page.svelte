@@ -27,6 +27,8 @@ const defaultSettings: GameSettings = {
 	city: null,
 	minPop: 10000,
 	cityRadius: 5,
+	mapSize: 25,
+	mapSizeExpanded: 50,
 };
 
 function loadSettings(): GameSettings {
@@ -134,7 +136,7 @@ onMount(async () => {
 	{/if}
 
 	<!-- Map and action buttons container - hover expands both -->
-	<div class="map-area">
+	<div class="map-area" style="--map-size: {settings.mapSize}vw; --map-size-expanded: {settings.mapSizeExpanded}vw;">
 		{#if L}
 			<GuessMap
 				{L}
@@ -221,7 +223,7 @@ onMount(async () => {
 		position: fixed;
 		bottom: 1rem;
 		right: 1rem;
-		width: min(300px, 40vw);
+		width: var(--map-size);
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
@@ -230,7 +232,7 @@ onMount(async () => {
 	}
 
 	.map-area:hover {
-		width: min(500px, 70vw);
+		width: var(--map-size-expanded);
 	}
 
 	.map-skeleton {

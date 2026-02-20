@@ -170,6 +170,30 @@ function handleKeydown(e: KeyboardEvent) {
 				</div>
 			{/if}
 
+			<fieldset class="mode-group">
+				<legend>Map Size</legend>
+				<div class="field">
+					<label for="mapSize">Normal: {localSettings.mapSize}vw</label>
+					<input
+						type="range"
+						id="mapSize"
+						min={10}
+						max={60}
+						bind:value={localSettings.mapSize}
+					/>
+				</div>
+				<div class="field">
+					<label for="mapSizeExpanded">Expanded: {localSettings.mapSizeExpanded}vw</label>
+					<input
+						type="range"
+						id="mapSizeExpanded"
+						min={20}
+						max={90}
+						bind:value={localSettings.mapSizeExpanded}
+					/>
+				</div>
+			</fieldset>
+
 			<button class="apply-btn" onclick={handleApply}>Apply</button>
 		</div>
 	</div>
