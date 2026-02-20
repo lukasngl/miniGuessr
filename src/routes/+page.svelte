@@ -301,4 +301,34 @@ onMount(async () => {
 	.btn.secondary:disabled:hover {
 		transform: none;
 	}
+
+	@media (max-width: 768px) {
+		.map-area {
+			position: fixed;
+			bottom: 0;
+			right: 0;
+			left: 0;
+			width: 100% !important;
+			border-radius: 0;
+			gap: 0;
+			transition: none;
+		}
+
+		.map-area:hover {
+			width: 100% !important;
+		}
+
+		.action-buttons {
+			gap: 0;
+		}
+
+		.btn {
+			padding: 10px 16px;
+			border-radius: 0;
+		}
+
+		.btn.primary:disabled {
+			opacity: 1;
+		}
+	}
 </style>
