@@ -1,3 +1,5 @@
+import { base } from "$app/paths";
+
 export class Asset {
 	url: string;
 	data: Blob | null = $state(null);
@@ -18,7 +20,7 @@ export class Asset {
 		this.error = null;
 
 		try {
-			const response = await fetch(this.url);
+			const response = await fetch(`${base}${this.url}`);
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}: ${response.statusText}`);
 			}
