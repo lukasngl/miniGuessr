@@ -21,43 +21,13 @@ export function isApiKeyConfigured(): boolean {
 	return PUBLIC_GOOGLE_MAPS_API_KEY.length > 0;
 }
 
-let cbCounter = 0;
-
-/** Execute a JSONP request, returning the raw callback argument. */
-function jsonp(url: string, timeout = 5000): Promise<unknown> {
-	return new Promise((resolve, reject) => {
-		const name = `_sv_cb_${cbCounter++}`;
-		const script = document.createElement("script");
-
-		const cleanup = () => {
-			delete (window as unknown as Record<string, unknown>)[name];
-			script.remove();
-		};
-
-		const timer = setTimeout(() => {
-			cleanup();
-			reject(new Error("JSONP timeout"));
-		}, timeout);
-
-		(window as unknown as Record<string, unknown>)[name] = (data: unknown) => {
-			clearTimeout(timer);
-			cleanup();
-			resolve(data);
-		};
-
-		script.src = `${url}&callback=${name}`;
-		script.onerror = () => {
-			clearTimeout(timer);
-			cleanup();
-			reject(new Error("JSONP script error"));
-		};
-		document.head.appendChild(script);
-	});
-}
+const SINGLE_IMAGE_SEARCH_URL =
+	"https://maps.googleapis.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/SingleImageSearch";
 
 /**
- * Check Street View coverage at a location using the unofficial GeoPhotoService endpoint.
- * Uses JSONP to bypass CORS — no proxy needed, works on static hosting.
+ * Check Street View coverage at a location using the unofficial maps.js
+ * internal SingleImageSearch endpoint (the grpc-web call the embed API makes).
+ * POST + CORS works from the browser directly, no JSONP or proxy needed.
  * Returns the actual panorama coordinates if coverage exists, or null if not.
  */
 export async function checkCoverage(
@@ -65,46 +35,81 @@ export async function checkCoverage(
 	lon: number,
 	radius = 1000,
 ): Promise<Location | null> {
-	const pb = `!1m5!1sapiv3!5sUS!11m2!1m1!1b0!2m4!1m2!3d${lat}!4d${lon}!2d${radius}!3m18!2m2!1sen!2sUS!9m1!1e2!11m12!1m3!1e2!2b1!3e2!1m3!1e3!2b1!3e2!1m3!1e10!2b1!3e2!4m6!1e1!1e2!1e3!1e4!1e8!1e6`;
-	const url = `https://maps.googleapis.com/maps/api/js/GeoPhotoService.SingleImageSearch?pb=${encodeURIComponent(pb)}`;
-
 	let data: unknown;
 	try {
-		data = await jsonp(url);
+		const response = await fetch(SINGLE_IMAGE_SEARCH_URL, {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json+protobuf",
+				"X-User-Agent": "grpc-web-javascript/0.1",
+			},
+			body: buildSingleImageSearchBody(lat, lon, radius),
+		});
+		if (!response.ok) return null;
+		data = await response.json();
 	} catch {
 		return null;
 	}
 
-	// Response is a nested array; verify it has a valid description
-	try {
-		const arr = data as Array<unknown>;
-		const description = (arr as any)[1]?.[3]?.[2]?.[1]?.[0];
-		if (!description) return null;
-	} catch {
-		return null;
-	}
+	return findPanoPosition(data);
+}
 
-	// Extract panorama coordinates from the nested structure
-	// Serialize and scan for coordinate pairs close to the input
-	const text = JSON.stringify(data);
-	const parts = text
-		.split(",")
-		.map((x) => x.match(/-?\d+(\.\d+)?/g))
-		.filter(Boolean)
-		.flat()
-		.map((x) => Number.parseFloat(x!));
+/** Encode the request in the JSON+protobuf wire format the endpoint expects. */
+function buildSingleImageSearchBody(
+	lat: number,
+	lon: number,
+	radius: number,
+): string {
+	return JSON.stringify([
+		["apiv3", null, null, null, "US", null, null, null, null, null, [[0]]],
+		[[null, null, lat, lon], radius],
+		[
+			null,
+			["en"],
+			null,
+			null,
+			null,
+			null,
+			null,
+			null,
+			[2],
+			null,
+			[[[2, 1, 2], [3, 1, 2], [10, 1, 2]]],
+		],
+		[[1, 2, 3, 4, 8, 6]],
+		null,
+		null,
+		null,
+		null,
+		"https://www.google.com/maps/embed/v1/streetview",
+	]);
+}
 
-	const nearby = parts.filter(
-		(x) => Math.abs(x - lat) < 1 || Math.abs(x - lon) < 1,
-	);
+/**
+ * Find the snapped panorama position in the response: a depth-first search
+ * for a [null, null, lat, lon] array, the format of every pano position.
+ * A no-coverage response ([[5,"generic","Search returned no images."]])
+ * contains none, so the search returns null.
+ */
+function findPanoPosition(data: unknown): Location | null {
+	if (!Array.isArray(data)) return null;
 
-	for (let i = 0; i < nearby.length - 1; i++) {
+	for (const item of data) {
 		if (
-			Math.abs(nearby[i] - lat) < 0.1 &&
-			Math.abs(nearby[i + 1] - lon) < 0.1
+			Array.isArray(item) &&
+			item.length === 4 &&
+			item[0] === null &&
+			item[1] === null
 		) {
-			return { lat: nearby[i], lon: nearby[i + 1] };
+			const panoLat = item[2];
+			const panoLon = item[3];
+			if (typeof panoLat === "number" && typeof panoLon === "number") {
+				return { lat: panoLat, lon: panoLon };
+			}
 		}
+
+		const nested = findPanoPosition(item);
+		if (nested) return nested;
 	}
 
 	return null;
